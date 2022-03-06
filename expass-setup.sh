@@ -10,13 +10,14 @@ mainDir=~/test/.expass
 CleanUp()
 {
     rm -rf $mainDir 
-    echo "Keyboard interrupt; directory for ExPass's data has been deleted (${mainDir}"
+    echo "Keyboard interrupt; the directory for ExPass's data has been deleted (${mainDir}"
     exit
 }
 
 mkdir $mainDir
 chmod 700 $mainDir
 chmod +t $mainDir
+mkdir $mainDir/data
 
 echo "The directory for ExPass's data has been set up in ${mainDir}"
 
@@ -34,8 +35,22 @@ masterPasswordCheck(){
 }
 
 masterPasswordCheck
-masterPassword2=""
+masterpassword2="" #i dont know
 
-touch $mainDir/password
-echo "Lorem Ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem Ipsum dolor" >> $mainDir/password
-#encrypt file with password
+touch $mainDir/verify_key
+
+#Verify the key
+openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterpassword -P | md5sum
+masterpassword="" #I DONT KNOW
+
+echo "Set up complete"
+sleep 3
+echo " ________          _______ 
+|        \\        |       \\
+| ▓▓▓▓▓▓▓▓__    __| ▓▓▓▓▓▓▓\\ ______   _______  _______
+| ▓▓__   |  \\  /  \\ ▓▓__/ ▓▓|      \ /       \/       \\
+| ▓▓  \\   \\▓▓\/  ▓▓ ▓▓    ▓▓ \\▓▓▓▓▓▓\  ▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓
+| ▓▓▓▓▓    >▓▓  ▓▓| ▓▓▓▓▓▓▓ /      ▓▓\▓▓    \\ \\▓▓    \\
+| ▓▓_____ /  ▓▓▓▓\\| ▓▓     |  ▓▓▓▓▓▓▓_\▓▓▓▓▓▓\\_\\▓▓▓▓▓▓\\
+| ▓▓     \\  ▓▓ \\▓▓\\ ▓▓      \\▓▓    ▓▓       ▓▓       ▓▓
+ \\▓▓▓▓▓▓▓▓\\▓▓   \\▓▓\\▓▓       \\▓▓▓▓▓▓▓\▓▓▓▓▓▓▓ \\▓▓▓▓▓▓▓"
