@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [[-f ~/.expass] && [-f ~/.expass/data] && [-f ~/.expass/verify_key]] then
+    echo ""
+else 
+    echo "ExPass has not been set up. (Essential directories do not exist)"
+    echo "Solution:"
+fi
