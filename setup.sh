@@ -10,14 +10,14 @@ mainDir=~/test/.expass
 CleanUp()
 {
     rm -rf $mainDir 
-    echo "Keyboard interrupt; the directory for ExPass's data has been deleted (${mainDir}"
+    echo "Keyboard interrupt; the directory for ExPass's data has been deleted (${mainDir})"
     exit
 }
 
 mkdir $mainDir
 chmod 700 $mainDir
 chmod +t $mainDir
-mkdir $mainDir/data
+touch $mainDir/data
 
 echo "The directory for ExPass's data has been set up in ${mainDir}"
 
@@ -25,7 +25,7 @@ read -sp "Please enter your master password: " masterpassword
 read -sp "Re-enter your master password: " masterpassword2
 
 masterPasswordCheck(){
-    if [[ "$masterpassword" == "$masterpassword2" ]] 
+    if [[ $masterpassword == $masterpassword2 ]]; 
     then
         echo "Master password confirmed"
     else
@@ -40,6 +40,10 @@ masterpassword2="" #i dont know
 #Verify the key
 openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterpassword -P | md5sum > $mainDir/verify_key
 masterpassword="" #I DONT KNOW
+
+#copy main file
+cp ../expass $mainDir/expass
+chmod +x $mainDir 
 
 echo "Set up complete"
 sleep 3

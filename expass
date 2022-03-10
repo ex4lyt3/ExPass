@@ -1,8 +1,62 @@
 #!/bin/bash
 
-if [[-f ~/.expass] && [-f ~/.expass/data] && [-f ~/.expass/verify_key]] then
-    echo ""
+OPTION=$1
+
+mainDir=~/test/.expass
+
+#Check if files exist
+if [ -d $mainDir ] && [ -f $mainDir/data ]  && [ -f $mainDir/verify_key ];
+then
+    echo " ________          _______ 
+|        \\        |       \\
+| ▓▓▓▓▓▓▓▓__    __| ▓▓▓▓▓▓▓\\ ______   _______  _______
+| ▓▓__   |  \\  /  \\ ▓▓__/ ▓▓|      \ /       \/       \\
+| ▓▓  \\   \\▓▓\/  ▓▓ ▓▓    ▓▓ \\▓▓▓▓▓▓\  ▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓
+| ▓▓▓▓▓    >▓▓  ▓▓| ▓▓▓▓▓▓▓ /      ▓▓\▓▓    \\ \\▓▓    \\
+| ▓▓_____ /  ▓▓▓▓\\| ▓▓     |  ▓▓▓▓▓▓▓_\▓▓▓▓▓▓\\_\\▓▓▓▓▓▓\\
+| ▓▓     \\  ▓▓ \\▓▓\\ ▓▓      \\▓▓    ▓▓       ▓▓       ▓▓
+ \\▓▓▓▓▓▓▓▓\\▓▓   \\▓▓\\▓▓       \\▓▓▓▓▓▓▓\▓▓▓▓▓▓▓ \\▓▓▓▓▓▓▓
+                                                v0.1"
 else 
     echo "ExPass has not been set up. (Essential directories do not exist)"
     echo "Solution:"
+    exit
 fi
+
+if [ $# == 0 ]
+then 
+    echo "No arguments supplied."
+    exit
+fi
+
+#Check for password
+verifyPassword()
+{
+    read -sp "Please enter your password " masterPassword
+    masterPassword=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | md5sum)
+    verify_key=$(cat $mainDir/verify_key)
+    echo $verify_key
+    if [[ $masterPassword == $verify_key ]]
+    then
+        echo "Password verified."
+    else
+        echo "Password incorrect. Please retry."
+        exit
+    fi
+}
+
+#Options
+case $OPTION in
+-e | -encrypt)
+    #Encrypt
+    echo "Hello nub"
+    verifyPassword
+    read -p "Enter your password entry [EntryTitle:Password] " passwordEntry
+    #Append entry in file
+    ;;
+*) 
+    #If no arguments are supplied
+    echo "Invalid option - '${OPTION}' detected"
+    echo "--help for more information"
+    ;;
+esac
