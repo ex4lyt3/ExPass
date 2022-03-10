@@ -48,7 +48,7 @@ verifyPassword()
 #Options
 case $OPTION in
 -e | -encrypt)
-    #Encrypt
+    #Encryp
     echo "Hello nub"
     verifyPassword
     read -p "Enter your password entry [EntryTitle:Password] " passwordEntry
