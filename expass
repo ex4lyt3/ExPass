@@ -48,21 +48,36 @@ verifyPassword()
 #Options
 case $OPTION in
 -e | --encrypt)
-    #Encrypls
+    #Encrypts
     echo "Hello nub"
     verifyPassword
     echo $masterPassword
     read -p "Enter a title for your password entry: " titleEntry
     read -sp "Enter the password for your new entry: " passwordEntry
-    key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P)
-    iv=$(grep "iv" $key)
-    grep "iv" $key
-    key=$(echo $key | grep "key")
+    key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
+    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv") #EXTREMELY INEFFICIENT
     #Append entry in file
+    exit
+    ;;
+-d | --decrypt)
+    exit
+    ;;
+-s | -search)
+    exit
+    ;;
+-l | --list)
+    exit
+    ;;
+--decrypt-all)
+    exit
+    ;;
+--help)
+    exit
     ;;
 *) 
     #If no arguments are supplied
     echo "Invalid option - '${OPTION}' detected"
     echo "--help for more information"
+    exit
     ;;
 esac
