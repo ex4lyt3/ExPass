@@ -1,11 +1,26 @@
 #!/bin/bash
 
+mainDir=~/test/.expass
+
+#Check if files exist
+if [ -d $mainDir ] && [ -f $mainDir/data ]  && [ -f $mainDir/verify_key ];
+then
+    read -p "WARNING: The essential directories have been set up. Do you want to set ExPass up again? All essential directories and data will be wiped. [Y/N] " resetInput
+    resetInput=${resetInput^^}
+    echo $resetInput
+    if [[ $resetInput == "Y" ]] 
+    then
+        echo "All essential directories and data will be wiped."
+    else
+        echo "Exit"
+        exit
+    fi
+fi
+
 echo "Setting up ExPass"
 echo "..."
 
-trap CleanUp 1 2 3 6 14 15 SIGTSTP
-
-mainDir=~/test/.expass 
+trap CleanUp 1 2 3 6 14 15 SIGTSTP 
 
 CleanUp()
 {
@@ -17,14 +32,18 @@ CleanUp()
 mkdir $mainDir
 chmod 700 $mainDir
 chmod +t $mainDir
-touch $mainDir/data
+mkdir $mainDir/data
+chmod 700 $mainDir/data
+chmod +t $mainDir/data
+touch $mainDir/data/index
 
 echo "The directory for ExPass's data has been set up in ${mainDir}"
 
 read -sp "Please enter your master password: " masterpassword
 read -sp "Re-enter your master password: " masterpassword2
 
-masterPasswordCheck(){
+masterPasswordCheck()
+{
     if [[ $masterpassword == $masterpassword2 ]]; 
     then
         echo "Master password confirmed"

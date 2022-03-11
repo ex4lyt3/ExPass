@@ -5,7 +5,7 @@ OPTION=$1
 mainDir=~/test/.expass
 
 #Check if files exist
-if [ -d $mainDir ] && [ -f $mainDir/data ]  && [ -f $mainDir/verify_key ];
+if [ -d $mainDir ] && [ -d $mainDir/data ]  && [ -f $mainDir/verify_key ];
 then
     echo " ________          _______ 
 |        \\        |       \\
@@ -33,10 +33,10 @@ fi
 verifyPassword()
 {
     read -sp "Please enter your password " masterPassword
-    masterPassword=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | md5sum)
-    verify_key=$(cat $mainDir/verify_key)
+    keyHash=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | md5sum)
+    verifyKey=$(cat $mainDir/verify_key)
     echo $verify_key
-    if [[ $masterPassword == $verify_key ]]
+    if [[ $keyHash == $verifyKey ]]
     then
         echo "Password verified."
     else
@@ -47,11 +47,17 @@ verifyPassword()
 
 #Options
 case $OPTION in
--e | -encrypt)
-    #Encryp
+-e | --encrypt)
+    #Encrypls
     echo "Hello nub"
     verifyPassword
-    read -p "Enter your password entry [EntryTitle:Password] " passwordEntry
+    echo $masterPassword
+    read -p "Enter a title for your password entry: " titleEntry
+    read -sp "Enter the password for your new entry: " passwordEntry
+    key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P)
+    iv=$(grep "iv" $key)
+    grep "iv" $key
+    key=$(echo $key | grep "key")
     #Append entry in file
     ;;
 *) 
