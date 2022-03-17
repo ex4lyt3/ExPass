@@ -33,7 +33,7 @@ fi
 verifyPassword()
 {
     read -sp "Please enter your password " masterPassword
-    keyHash=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | md5sum)
+    keyHash=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | shasum -a 512)
     verifyKey=$(cat $mainDir/verify_key)
     echo $verify_key
     if [[ $keyHash == $verifyKey ]]
@@ -56,6 +56,7 @@ case $OPTION in
     read -sp "Enter the password for your new entry: " passwordEntry
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv") #EXTREMELY INEFFICIENT
+    openssl enc -nosalt -aes-256-cbc -d -in $mainDir/data/index -base64 -K $key -iv $iv
     #Append entry in file
     exit
     ;;
