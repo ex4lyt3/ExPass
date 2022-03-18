@@ -37,7 +37,7 @@ chmod +t $mainDir
 mkdir $mainDir/data
 chmod 700 $mainDir/data
 chmod +t $mainDir/data
-touch $mainDir/data/index.txt
+touch $mainDir/data/index
 touch $mainDir/data/index.txt.enc
 
 echo "The directory for ExPass's data has been set up in ${mainDir}"
@@ -64,7 +64,7 @@ openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterpassword -P | shasum -a 512 >
 key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterpassword -P | grep "key")
 iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterpassword -P | grep "iv")
 echo "Password index" > $mainDir/data/index
-openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index -out $mainDir/data/index.txt.enc -K -base64 "${key:4:64}" -iv "${iv:4:32}" #returns an error if you do not quote the env variables
+openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index -out $mainDir/data/index.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}" #returns an error if you do not quote the env variables
 masterpassword=""
 
 #copy main file
