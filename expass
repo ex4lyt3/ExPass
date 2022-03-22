@@ -49,13 +49,12 @@ verifyPassword()
 case $OPTION in
 -e | --encrypt)
     #Encrypts
-    echo "Hello nub"
     verifyPassword
     echo $masterPassword
     read -p "Enter a title for your password entry: " titleEntry
     read -sp "Enter the password for your new entry: " passwordEntry
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
-    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv") #EXTREMELY INEFFICIENT
+    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     randomNumber=$RANDOM  
     checkIfRandom()
@@ -71,15 +70,34 @@ case $OPTION in
     openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/$randomNumber -out $mainDir/data/$randomNumber -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     echo "$titleEntry:$mainDir/data/$randomNumber" >> $mainDir/data/index
     openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index -out $mainDir/data/index.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+    #rm $mainDir/data/index
     exit
     ;;
 -d | --decrypt)
+
+    cut -d: -f 2 <<< "string:efwjiefjiwjifwjei"
     exit
     ;;
--s | -search)
+-s | --search)
+    verifyPassword
+    if [ $# > 1 ] 
+    then
+    key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
+    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
+    openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+    cat $mainDir/data/index | grep "${@:2}" "all arguments after first"
+    else
+    echo "Invalid argument(s) supplied."
+    fi
     exit
     ;;
 -l | --list)
+    verifyPassword
+    key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
+    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
+    openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+    cat $mainDir/data/index 
+    #rm $mainDir/data/index
     exit
     ;;
 --decrypt-all)
