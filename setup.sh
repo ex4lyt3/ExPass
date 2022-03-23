@@ -72,7 +72,7 @@ cp ../expass $mainDir/expass
 chmod +x $mainDir 
 
 echo "Set up complete"
-sleep 3
+sleep 0.3
 echo " ________          _______ 
 |        \\        |       \\
 | ▓▓▓▓▓▓▓▓__    __| ▓▓▓▓▓▓▓\\ ______   _______  _______
