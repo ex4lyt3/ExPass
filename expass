@@ -2,7 +2,7 @@
 
 OPTION=$1
 
-mainDir=~/test/.expass
+mainDir=~/.expass
 
 #Check if files exist
 if [ -d $mainDir ] && [ -d $mainDir/data ]  && [ -f $mainDir/verify_key ];
@@ -23,7 +23,7 @@ else
     exit
 fi
 
-if [ $# == 0 ]
+if [ $# -eq 0 ]
 then 
     echo "No arguments supplied."
     exit
@@ -46,7 +46,7 @@ verifyPassword()
 
 #Options
 case $OPTION in
--e | --encrypt)
+-e | --encrypt | --store)
     #Encrypts
     verifyPassword
     echo $masterPassword
@@ -70,31 +70,33 @@ case $OPTION in
     cat $mainDir/data/$randomNumber
     openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/$randomNumber -out $mainDir/data/$randomNumber.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     echo "$titleEntry:$mainDir/data/$randomNumber.enc" >> $mainDir/data/index
+    rm $mainDir/data/$randomNumber
     openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index -out $mainDir/data/index.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
-    #rm $mainDir/data/index
+    rm $mainDir/data/index
     exit
     ;;
--d | --decrypt)
-    verifyPassword
-    if [ $# > 1 ] 
+-d | --decrypt | --unlock)
+    if [ $# -gt 1 ] 
     then
+    verifyPassword
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     title=$(cat $mainDir/data/index | grep "${@:2}")
     entryFile=$(cut -d: -f 2 <<< $title)
     cat $entryFile > $mainDir/result.enc
-    cat $mainDir/result.enc
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/result.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+    rm $mainDir/result.enc
+    rm $mainDir/data/index
     else
     echo "Invalid argument(s) supplied."
     fi
     exit
     ;;
 -s | --search)
-    verifyPassword
-    if [ $# > 1 ] 
+    if [ $# -gt 1 ] 
     then
+    verifyPassword
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
@@ -110,10 +112,24 @@ case $OPTION in
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     cat $mainDir/data/index 
-    #rm $mainDir/data/index
+    rm $mainDir/data/index
     exit
     ;;
 --decrypt-all)
+    verifyPassword
+    key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
+    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
+    openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+    for file in $mainDir/data/*;
+    do  
+        if [[ $file != "$mainDir/data/index.enc" && $file != "$mainDir/data/index" ]]
+        then
+            cat $file > $mainDir/result.enc
+            openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/result.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+        fi
+    done
+    rm $mainDir/result.enc
+    rm $mainDir/data/index
     exit
     ;;
 --help)
@@ -121,9 +137,16 @@ case $OPTION in
     -e: Encrypts and stores a new entry
     -d [EntryTitle]: Decrypts the entry stated
     -s [Query]: Search for entry
+    -l: Lists all entries
     --decrypt-all: Decrypt all passwords
     -h: Lists commands
     --export: Exports all necessary data into one file"
+    exit
+    ;;
+--export)
+    exit
+    ;;
+--import)
     exit
     ;;
 *) 

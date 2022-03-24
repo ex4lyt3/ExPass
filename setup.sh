@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mainDir=~/test/.expass
+mainDir=~/.expass
 
 #Check if files exist
 if [ -d $mainDir ] && [ -d $mainDir/data ]  && [ -f $mainDir/verify_key ];
@@ -38,7 +38,7 @@ mkdir $mainDir/data
 chmod 700 $mainDir/data
 chmod +t $mainDir/data
 touch $mainDir/data/index
-touch $mainDir/data/index.txt.enc
+touch $mainDir/data/index.enc
 
 echo "The directory for ExPass's data has been set up in ${mainDir}"
 
