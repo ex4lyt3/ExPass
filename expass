@@ -23,6 +23,7 @@ else
     exit
 fi
 
+#Check if arguments are supplied
 if [ $# -eq 0 ]
 then 
     echo "No arguments supplied."
