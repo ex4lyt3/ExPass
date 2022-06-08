@@ -1,7 +1,7 @@
 # ExPass Password Manager
-Version 0.1
+Version 2.0
 
-## A highly inefficient (for now) command-line password manager that should not be used for real/actual purposes
+## A highly inefficient command-line password manager that should not be used for actual purposes
 Scripted in `bash`
 
 Uses openssl to encrypt password files with AES-256
@@ -13,7 +13,7 @@ Well, it currently uses multiple decryptions/encryptions with openssl per comman
 
 **Why is it bad?**
 
-Multiple reasons. First, the key generated is not salted which increases the potential of brute force. Second, it is highly inefficient. Third, it is just bad.
+Multiple reasons. First, the key generated is not salted which increases the potential of brute force. Second, it is highly inefficient. Third, it is just (less) bad (in v2.0).
 
 **How does it work?**
 

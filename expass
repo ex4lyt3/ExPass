@@ -1,8 +1,19 @@
 #!/bin/bash
 
-OPTION=$1
-
 mainDir=~/.expass
+
+### Colors ##
+ESC=$(printf '\033') RESET="${ESC}[0m" BLACK="${ESC}[30m" RED="${ESC}[31m"
+GREEN="${ESC}[32m" YELLOW="${ESC}[33m" BLUE="${ESC}[34m" MAGENTA="${ESC}[35m"
+CYAN="${ESC}[36m" WHITE="${ESC}[37m" DEFAULT="${ESC}[39m"
+
+### Color Functions ##
+greenprint() { printf "${GREEN}%s${RESET}\n" "$1"; }
+blueprint() { printf "${BLUE}%s${RESET}\n" "$1"; }
+redprint() { printf "${RED}%s${RESET}\n" "$1"; }
+yellowprint() { printf "${YELLOW}%s${RESET}\n" "$1"; }
+magentaprint() { printf "${MAGENTA}%s${RESET}\n" "$1"; }
+cyanprint() { printf "${CYAN}%s${RESET}\n" "$1"; }
 
 #Check if files exist
 if [ -d $mainDir ] && [ -d $mainDir/data ]  && [ -f $mainDir/verify_key ];
@@ -15,44 +26,42 @@ then
 | ▓▓▓▓▓    >▓▓  ▓▓| ▓▓▓▓▓▓▓ /      ▓▓\▓▓    \\ \\▓▓    \\
 | ▓▓_____ /  ▓▓▓▓\\| ▓▓     |  ▓▓▓▓▓▓▓_\▓▓▓▓▓▓\\_\\▓▓▓▓▓▓\\
 | ▓▓     \\  ▓▓ \\▓▓\\ ▓▓      \\▓▓    ▓▓       ▓▓       ▓▓
- \\▓▓▓▓▓▓▓▓\\▓▓   \\▓▓\\▓▓       \\▓▓▓▓▓▓▓\▓▓▓▓▓▓▓ \\▓▓▓▓▓▓▓
-                                                v0.1"
+ \\▓▓▓▓▓▓▓▓\\▓▓   \\▓▓\\▓▓       \\▓▓▓▓▓▓▓\▓▓▓▓▓▓▓ \\▓▓▓▓▓▓
+                                                v2.0"
 else 
     echo "ExPass has not been set up. (Essential directories do not exist)"
-    echo "Solution:"
-    exit
-fi
-
-#Check if arguments are supplied
-if [ $# -eq 0 ]
-then 
-    echo "No arguments supplied."
+    echo "Solution: Execute the 'setup' file"
     exit
 fi
 
 #Check for password
 verifyPassword()
 {
-    read -sp "Please enter your password " masterPassword
+    read -sp "Please enter your password: " masterPassword
     keyHash=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | shasum -a 512)
     verifyKey=$(cat $mainDir/verify_key)
     if [[ $keyHash == $verifyKey ]]
     then
-        echo "Password verified."
+        echo "VERIFIED"
     else
         echo "Password incorrect. Please retry."
         exit
     fi
 }
 
+mainMenu()
+{
+sleep 0.05
+echo $(yellowprint "Console -> ")
+read -r OPTION
 #Options
 case $OPTION in
--e | --encrypt | --store)
+encrypt | --store)
     #Encrypts
     verifyPassword
-    echo $masterPassword
-    read -p "Enter a title for your password entry: " titleEntry
-    read -sp "Enter the password for your new entry: " passwordEntry
+    echo $masterPassword #remove
+    read -p "Enter the $(cyanprint 'TITLE') for your password entry: " titleEntry
+    read -sp "Enter the $(yellowprint 'PASSWORD') for your new entry: " passwordEntry
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
@@ -74,9 +83,10 @@ case $OPTION in
     rm $mainDir/data/$randomNumber
     openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index -out $mainDir/data/index.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     rm $mainDir/data/index
+    mainMenu
     exit
     ;;
--d | --decrypt | --unlock)
+decrypt)
     if [ $# -gt 1 ] 
     then
     verifyPassword
@@ -92,9 +102,10 @@ case $OPTION in
     else
     echo "Invalid argument(s) supplied."
     fi
+    mainMenu
     exit
     ;;
--s | --search)
+search)
     if [ $# -gt 1 ] 
     then
     verifyPassword
@@ -105,18 +116,20 @@ case $OPTION in
     else
     echo "Invalid argument(s) supplied."
     fi
+    mainMenu
     exit
     ;;
--l | --list)
+list)
     verifyPassword
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     cat $mainDir/data/index 
     rm $mainDir/data/index
+    mainMenu
     exit
     ;;
---decrypt-all)
+decrypt-all)
     verifyPassword
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
@@ -131,29 +144,46 @@ case $OPTION in
     done
     rm $mainDir/result.enc
     rm $mainDir/data/index
+    mainMenu
     exit
     ;;
---help)
+help)
     echo "USAGE: ./expass [OPTION] 
-    -e: Encrypts and stores a new entry
-    -d [EntryTitle]: Decrypts the entry stated
-    -s [Query]: Search for entry
-    -l: Lists all entries
-    --decrypt-all: Decrypt all passwords
-    -h: Lists commands
-    --export: Exports all necessary data into one file"
+
+    encrypt: $(redprint 'Encrypts') and stores a new entry
+    decrypt [EntryTitle]: $(redprint 'Decrypts') the entry stated
+    decrypt-all: Decrypt all passwords
+
+    search [Query]: Search for entry
+    list: Lists all entries
+    help: Lists commands
+
+    export: Exports all necessary data into one file"
+    mainMenu
     exit
     ;;
---export)
+export)
+    zip database.expass $mainDir
+    mv -v database.expass ~/database.expass
+    mainMenu
     exit
     ;;
---import)
+import)
+    mainMenu
+    exit
+    ;;
+exit)
+    echo "Have a nice day!"
     exit
     ;;
 *) 
     #If no arguments are supplied
     echo "Invalid option - '${OPTION}' detected"
-    echo "--help for more information"
+    echo "Type 'help' for more information"
+    mainMenu
     exit
     ;;
 esac
+}
+
+mainMenu
