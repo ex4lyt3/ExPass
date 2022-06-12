@@ -27,7 +27,7 @@ then
 | ▓▓_____ /  ▓▓▓▓\\| ▓▓     |  ▓▓▓▓▓▓▓_\▓▓▓▓▓▓\\_\\▓▓▓▓▓▓\\
 | ▓▓     \\  ▓▓ \\▓▓\\ ▓▓      \\▓▓    ▓▓       ▓▓       ▓▓
  \\▓▓▓▓▓▓▓▓\\▓▓   \\▓▓\\▓▓       \\▓▓▓▓▓▓▓\▓▓▓▓▓▓▓ \\▓▓▓▓▓▓
-                                                v2.0"
+                                                v2.1"
 else 
     echo "ExPass has not been set up. (Essential directories do not exist)"
     echo "Solution: Execute the 'setup' file"
@@ -59,12 +59,12 @@ case $OPTION in
 encrypt | --store)
     #Encrypts
     verifyPassword
-    echo $masterPassword #remove
     read -p "Enter the $(cyanprint 'TITLE') for your password entry: " titleEntry
     read -sp "Enter the $(yellowprint 'PASSWORD') for your new entry: " passwordEntry
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+    #Produce random file
     randomNumber=$RANDOM  
     checkIfRandom()
     {
@@ -76,8 +76,19 @@ encrypt | --store)
     }
     checkIfRandom
     echo "$titleEntry:$passwordEntry" > $mainDir/data/$randomNumber
-    echo $randomNumber
-    cat $mainDir/data/$randomNumber
+    isEntryUnique()
+    {
+        entryIsUnique=$(cat $mainDir/data/index | grep -c "${titleEntry}:")
+        if [ $entryIsUnique != "0" ]
+        then
+            echo "Entry named ${titleEntry} already exists."
+            read -p "Enter the $(cyanprint 'TITLE') for your password entry: " titleEntry
+            isEntryUnique
+        else
+            return
+        fi
+    }
+    isEntryUnique
     openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/$randomNumber -out $mainDir/data/$randomNumber.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     echo "$titleEntry:$mainDir/data/$randomNumber.enc" >> $mainDir/data/index
     rm $mainDir/data/$randomNumber
@@ -87,35 +98,27 @@ encrypt | --store)
     exit
     ;;
 decrypt)
-    if [ $# -gt 1 ] 
-    then
     verifyPassword
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
-    title=$(cat $mainDir/data/index | grep "${@:2}")
+    read -p "What entry do you want to decrypt? " decryptEntry
+    title=$(cat $mainDir/data/index | grep "$decryptEntry")
     entryFile=$(cut -d: -f 2 <<< $title)
     cat $entryFile > $mainDir/result.enc
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/result.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
     rm $mainDir/result.enc
     rm $mainDir/data/index
-    else
-    echo "Invalid argument(s) supplied."
-    fi
     mainMenu
     exit
     ;;
 search)
-    if [ $# -gt 1 ] 
-    then
     verifyPassword
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
     iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
-    cat $mainDir/data/index | grep "${@:2}" #"all arguments after first"
-    else
-    echo "Invalid argument(s) supplied."
-    fi
+    read -p "What do you want to search? " searchEntry
+    cat $mainDir/data/index | grep "$searchEntry" #"all arguments after first"
     mainMenu
     exit
     ;;
@@ -151,10 +154,10 @@ help)
     echo "USAGE: ./expass [OPTION] 
 
     encrypt: $(redprint 'Encrypts') and stores a new entry
-    decrypt [EntryTitle]: $(redprint 'Decrypts') the entry stated
+    decrypt: $(redprint 'Decrypts') entry
     decrypt-all: Decrypt all passwords
 
-    search [Query]: Search for entry
+    search: $(blueprint 'Search') for entry
     list: Lists all entries
     help: Lists commands
 
@@ -163,17 +166,34 @@ help)
     exit
     ;;
 export)
-    zip database.expass $mainDir
+    cd $mainDir
+    zip -r database.expass . #recursive, verbose and keep input files
     mv -v database.expass ~/database.expass
     mainMenu
     exit
     ;;
 import)
+    read -p "What file do you want to import (FULL PATH)" importFile
+    if [ -d $mainDir ] && [ -d $mainDir/data ]  && [ -f $mainDir/verify_key ];
+    then
+        read -p "WARNING: The essential directories have been set up. Do you want to set ExPass up again? All essential directories and data will be wiped. [Y/N] " resetInput
+        resetInput=${resetInput^^}
+        if [[ $resetInput == "Y" ]] 
+        then
+            echo "All essential directories and data will be wiped."
+            rm -rf $mainDir 
+            mkdir ~/.expass
+            cd ~/.expass
+            unzip $importFile 
+        else
+            echo "Exit"
+        fi
+    fi
     mainMenu
     exit
     ;;
 exit)
-    echo "Have a nice day!"
+    echo "ExPass v2.1"
     exit
     ;;
 *) 
