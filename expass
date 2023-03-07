@@ -27,7 +27,13 @@ then
 | ▓▓_____ /  ▓▓▓▓\\| ▓▓     |  ▓▓▓▓▓▓▓_\▓▓▓▓▓▓\\_\\▓▓▓▓▓▓\\
 | ▓▓     \\  ▓▓ \\▓▓\\ ▓▓      \\▓▓    ▓▓       ▓▓       ▓▓
  \\▓▓▓▓▓▓▓▓\\▓▓   \\▓▓\\▓▓       \\▓▓▓▓▓▓▓\▓▓▓▓▓▓▓ \\▓▓▓▓▓▓
-                                                v2.1"
+                                                v2.1
+
+-----------------------CONSOLE------------------------
+
+EXPASS: A poorly made password manager
+Type 'help' for more information
+"
 else 
     echo "ExPass has not been set up. (Essential directories do not exist)"
     echo "Solution: Execute the 'setup' file"
@@ -112,6 +118,24 @@ decrypt)
     mainMenu
     exit
     ;;
+decrypt-all)
+    verifyPassword
+    key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
+    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
+    openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+    for file in $mainDir/data/*;
+    do  
+        if [[ $file != "$mainDir/data/index.enc" && $file != "$mainDir/data/index" ]]
+        then
+            cat $file > $mainDir/result.enc
+            openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/result.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+        fi
+    done
+    rm $mainDir/result.enc
+    rm $mainDir/data/index
+    mainMenu
+    exit
+    ;;
 search)
     verifyPassword
     key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
@@ -132,36 +156,44 @@ list)
     mainMenu
     exit
     ;;
-decrypt-all)
+delete)
     verifyPassword
-    key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
-    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
+    read -p "What entry do you want to delete?" deleteEntryInput
     openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"
-    for file in $mainDir/data/*;
-    do  
-        if [[ $file != "$mainDir/data/index.enc" && $file != "$mainDir/data/index" ]]
-        then
-            cat $file > $mainDir/result.enc
-            openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/result.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
-        fi
-    done
-    rm $mainDir/result.enc
-    rm $mainDir/data/index
+    deleteEntry=$(cat $mainDir/data/index | grep -c "${deleteEntryInput}:")
+    if [ $deleteEntry != 0 ]
+    then
+        deleteEntry=$(cat $mainDir/data/index | grep -n "${deleteEntryInput}:")
+        deleteEntry=$(cat $mainDir/data/index | grep -c "${deleteEntryInput}:")
+        deleteEntry=$(cut -d: -f 1 <<< $deleteEntry)
+        echo $deleteEntry
+        sed "${deleteEntry}d" $mainDir/data/index
+        cat $mainDir/data/index
+        openssl enc -e -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index -out $mainDir/data/index.enc -base64 -K "${key:4:64}" -iv "${iv:4:32}"
+        echo "'${deleteEntryInput}' has been deleted"
+    else
+        echo "Entry not found"
+    fi
     mainMenu
     exit
     ;;
 help)
     echo "USAGE: ./expass [OPTION] 
 
+    MAIN
     encrypt: $(redprint 'Encrypts') and stores a new entry
     decrypt: $(redprint 'Decrypts') entry
     decrypt-all: Decrypt all passwords
 
+    MISCELLANEOUS
     search: $(blueprint 'Search') for entry
     list: Lists all entries
     help: Lists commands
+    delete: Deletes an entry specified
 
-    export: Exports all necessary data into one file"
+    EXPORTING/IMPORTING
+    export: Exports all necessary data into one file
+    import: Imports a zipped file into the main directory"
     mainMenu
     exit
     ;;

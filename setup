@@ -20,7 +20,7 @@ fi
 
 echo "Setting up ExPass"
 echo "..."
-1
+
 sudo apt install openssl
 sudo apt install zip
 
@@ -44,7 +44,7 @@ touch $mainDir/data/index.enc
 
 echo "The directory for ExPass's data has been set up in ${mainDir}"
 
-read -sp "Please enter your master password: " masterpassword
+read -sp "Please enter your master password: (For ExPass)" masterpassword
 read -sp "Re-enter your master password: " masterpassword2
 
 masterPasswordCheck()
