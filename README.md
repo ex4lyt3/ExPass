@@ -23,3 +23,7 @@ Key verification sort of works like HMAC where the hash of the generated key is 
 **Why did I make this?**
 
 Learn bash (This is my first bash project)
+
+edit: turns out i am dumb with openssl. im pretty sure its more simple to encrypt and decrypt the password entry and index using `openssl enc -aes-256-cbc -pbkdf2 -in password -out password.enc` then `key=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "key")
+    iv=$(openssl enc -nosalt -aes-256-cbc -pbkdf2 -k $masterPassword -P | grep "iv")
+    openssl enc -d -nosalt -aes-256-cbc -pbkdf2 -in $mainDir/data/index.enc -out $mainDir/data/index -base64 -K "${key:4:64}" -iv "${iv:4:32}"` where the former is also encrypted with a salt??? 
